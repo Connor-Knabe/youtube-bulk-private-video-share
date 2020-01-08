@@ -1,0 +1,15 @@
+{
+	"name": "youtube-bulk-private-video-share",
+	"version": "0.0.1",
+	"description": "share multiple private youtube videos to one email address easily",
+	"main": "app.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Connor Knabe",
+	"license": "MIT",
+	"dependencies": {
+		"log4js": "^3.0.6",
+		"nightmare": "^3.0.1"
+	}
+}
