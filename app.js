@@ -2,6 +2,8 @@ const log4js = require('log4js');
 var logger = log4js.getLogger();
 logger.level = 'debug';
 var login = require('./login.js');
+var video = require('./video.js');
+
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 // @ts-ignore
@@ -9,51 +11,64 @@ puppeteer.use(StealthPlugin());
 
 logger.info('start');
 
-var numberOfBrowsersInParallel = 4;
+var numberOfBrowsersInParallel = 1;
 
 main();
 async function main() {
-	for (let vidNum = 0; vidNum < login.youtubeVideos.length; vidNum += numberOfBrowsersInParallel) {
+	for (let vidNum = 0; vidNum < video.youtubeVideoIds.length; vidNum += numberOfBrowsersInParallel) {
 		var browsers = [];
 
 		for (let browserNum = 0; browserNum < numberOfBrowsersInParallel; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
-			if (login.youtubeVideos[currentVideoNum]) {
+			if (video.youtubeVideoIds[currentVideoNum]) {
 				// logger.debug('currentVid num', currentVideoNum);
-				browsers.push(addEmailsToVideo(login.youtubeVideos[currentVideoNum]));
-				// browsers.push(login.youtubeVideos[currentVideoNum]);
+				browsers.push(addEmailsToVideo(video.youtubeVideoIds[currentVideoNum]));
+				// browsers.push(video.youtubeVideos[currentVideoNum]);
 			}
 		}
 
-		await Promise.all(browsers);
+		await Promise.all(browsers)
+			.then((videoId) => {
+				logger.info(`Finished successfully sharing ${videoId}`);
+			})
+			.catch((result) => {
+				logger.error(`Failed sharing ${result.videoId}`, result.err);
+			});
 	}
 }
 
-function addEmailsToVideo(videoUrl) {
+function addEmailsToVideo(videoId) {
 	return new Promise(async (resolve, reject) => {
-		logger.info('video url', videoUrl);
-
+		logger.info('Processing video url: ', videoId);
 		logger.info(new Date(), 'Logging into YouTube Studio to add users to private videos');
-		// var videos = [ 'videourl' ];
 		// @ts-ignore
-		const browser = await puppeteer.launch({ headless: false }); // default is true
-		const page = await browser.newPage();
-		await page.goto(login.youtubeUrl, { waitUntil: 'networkidle2' });
-		await page.type('input[type="email"]', login.email);
-		await page.type('body', '\u000d');
-		await page.waitForNavigation();
-		// await page.waitFor('input[type="password"]');
-		await page.waitFor(5000);
-		await page.type('input[type="password"]', login.pass);
-		await page.type('body', '\u000d');
-		await page.waitForNavigation();
-		await page.goto(videoUrl, { waitUntil: 'networkidle2' });
-		// await page.waitForNavigation();
-		await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
-		await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', login.inputEmail);
-		await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
-		await page.waitFor('.yt-dialog-waiting-content');
-		await browser.close();
-		resolve();
+
+		try {
+			const browser = await puppeteer.launch({ headless: true });
+			const page = await browser.newPage();
+			await page.goto(video.youtubeUrl, { waitUntil: 'networkidle2' });
+			await page.type('input[type="email"]', login.email);
+			await page.type('body', '\u000d');
+			await page.waitForNavigation();
+			await page.waitFor(1000);
+			await page.type('input[type="password"]', login.pass);
+			await page.type('body', '\u000d');
+			await page.waitForNavigation();
+			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
+			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
+			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', video.inputEmails);
+			await page.click('.yt-uix-form-input-checkbox.notify-via-email');
+			await page.waitFor(500);
+			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
+			await page.waitFor(5000);
+			await browser.close();
+			resolve(videoId);
+		} catch (exception) {
+			var result = {
+				err: exception,
+				videoId: videoId
+			};
+			reject(result);
+		}
 	});
 }
