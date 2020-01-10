@@ -8,7 +8,6 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 // @ts-ignore
 puppeteer.use(StealthPlugin());
-
 logger.info('start');
 
 main();
@@ -19,9 +18,7 @@ async function main() {
 		for (let browserNum = 0; browserNum < options.numberOfBrowsersInParallel; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
 			if (video.youtubeVideoIds[currentVideoNum]) {
-				// logger.debug('currentVid num', currentVideoNum);
 				browsers.push(addEmailsToVideo(video.youtubeVideoIds[currentVideoNum]));
-				// browsers.push(video.youtubeVideos[currentVideoNum]);
 			}
 		}
 
@@ -54,7 +51,7 @@ function addEmailsToVideo(videoId) {
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
 			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
 			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', video.inputEmails);
-			if (options.emailNotification) {
+			if (!options.emailNotification) {
 				await page.click('.yt-uix-form-input-checkbox.notify-via-email');
 			}
 			await page.waitFor(500);
