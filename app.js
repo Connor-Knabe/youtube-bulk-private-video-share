@@ -7,28 +7,24 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 // @ts-ignore
 puppeteer.use(StealthPlugin());
 
-var nightmare = null;
 logger.info('start');
+
+var numberOfBrowsersInParallel = 4;
 
 main();
 async function main() {
-	for (let vidNum = 0; vidNum < login.youtubeVideos.length; vidNum += 3) {
-		logger.debug(vidNum);
-		logger.debug(login.youtubeVideos[vidNum]);
+	for (let vidNum = 0; vidNum < login.youtubeVideos.length; vidNum += numberOfBrowsersInParallel) {
+		var browsers = [];
 
-		var browsers = [ addEmailsToVideo(login.youtubeVideos[vidNum]) ];
-
-		if (login.youtubeVideos[vidNum + 1]) {
-			logger.debug(vidNum + 1);
-			logger.debug(login.youtubeVideos[vidNum + 1]);
-			browsers.push(addEmailsToVideo(login.youtubeVideos[vidNum + 1]));
+		for (let browserNum = 0; browserNum < numberOfBrowsersInParallel; browserNum++) {
+			var currentVideoNum = vidNum + browserNum;
+			if (login.youtubeVideos[currentVideoNum]) {
+				// logger.debug('currentVid num', currentVideoNum);
+				browsers.push(addEmailsToVideo(login.youtubeVideos[currentVideoNum]));
+				// browsers.push(login.youtubeVideos[currentVideoNum]);
+			}
 		}
 
-		if (login.youtubeVideos[vidNum + 2]) {
-			logger.debug(vidNum + 2);
-			logger.debug(login.youtubeVideos[vidNum + 2]);
-			browsers.push(addEmailsToVideo(login.youtubeVideos[vidNum + 2]));
-		}
 		await Promise.all(browsers);
 	}
 }
