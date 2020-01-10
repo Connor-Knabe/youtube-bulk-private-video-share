@@ -12,10 +12,24 @@ logger.info('start');
 
 main();
 async function main() {
-	for (let i = 0; i < login.youtubeVideos.length; i++) {
-		var promise1 = addEmailsToVideo(login.youtubeVideos[i]);
+	for (let vidNum = 0; vidNum < login.youtubeVideos.length; vidNum += 3) {
+		logger.debug(vidNum);
+		logger.debug(login.youtubeVideos[vidNum]);
 
-		await Promise.all([ promise1 ]);
+		var browsers = [ addEmailsToVideo(login.youtubeVideos[vidNum]) ];
+
+		if (login.youtubeVideos[vidNum + 1]) {
+			logger.debug(vidNum + 1);
+			logger.debug(login.youtubeVideos[vidNum + 1]);
+			browsers.push(addEmailsToVideo(login.youtubeVideos[vidNum + 1]));
+		}
+
+		if (login.youtubeVideos[vidNum + 2]) {
+			logger.debug(vidNum + 2);
+			logger.debug(login.youtubeVideos[vidNum + 2]);
+			browsers.push(addEmailsToVideo(login.youtubeVideos[vidNum + 2]));
+		}
+		await Promise.all(browsers);
 	}
 }
 
