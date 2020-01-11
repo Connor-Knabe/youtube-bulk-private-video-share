@@ -12,16 +12,14 @@ logger.info('start');
 
 main();
 async function main() {
-	for (let vidNum = 0; vidNum < video.youtubeVideoIds.length; vidNum += options.numberOfBrowsersInParallel) {
+	for (let vidNum = 0; vidNum < video.youtubeVideoIds.length; vidNum += options.parallelBrowserCount) {
 		var browsers = [];
-
-		for (let browserNum = 0; browserNum < options.numberOfBrowsersInParallel; browserNum++) {
+		for (let browserNum = 0; browserNum < options.parallelBrowserCount; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
 			if (video.youtubeVideoIds[currentVideoNum]) {
 				browsers.push(addEmailsToVideo(video.youtubeVideoIds[currentVideoNum]));
 			}
 		}
-
 		await Promise.all(browsers)
 			.then((videoId) => {
 				logger.info(`Finished successfully sharing ${videoId}`);
@@ -36,8 +34,8 @@ function addEmailsToVideo(videoId) {
 	return new Promise(async (resolve, reject) => {
 		logger.info('Processing video url: ', videoId);
 		logger.info(new Date(), 'Logging into YouTube Studio to add users to private videos');
-		// @ts-ignore
 		try {
+			// @ts-ignore
 			const browser = await puppeteer.launch({ headless: !options.showBrowserWindow });
 			const page = await browser.newPage();
 			await page.goto(video.youtubeUrl, { waitUntil: 'networkidle2' });
