@@ -36,7 +36,7 @@ function addEmailsToVideo(videoId) {
 		logger.info(new Date(), 'Logging into YouTube Studio to add users to private videos');
 		try {
 			// @ts-ignore
-			const browser = await puppeteer.launch({ headless: !options.showBrowserWindow });
+			const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 			const page = await browser.newPage();
 			await page.goto(video.youtubeUrl, { waitUntil: 'networkidle2' });
 			await page.type('input[type="email"]', login.email);
@@ -49,7 +49,7 @@ function addEmailsToVideo(videoId) {
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
 			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
 			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', video.inputEmails);
-			if (!options.emailNotification) {
+			if (options.disableEmailNotification) {
 				await page.click('.yt-uix-form-input-checkbox.notify-via-email');
 			}
 			await page.waitFor(500);
