@@ -52,7 +52,7 @@ function addEmailsToVideo(videoId) {
 			if (options.disableEmailNotification) {
 				await page.click('.yt-uix-form-input-checkbox.notify-via-email');
 			}
-			await page.waitFor(500);
+			await page.waitFor(1000);
 			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
 			await page.waitFor(5000);
 			await browser.close();
