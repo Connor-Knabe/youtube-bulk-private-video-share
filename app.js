@@ -34,9 +34,10 @@ function addEmailsToVideo(videoId) {
 	return new Promise(async (resolve, reject) => {
 		logger.info('Processing video url: ', videoId);
 		logger.info(new Date(), 'Logging into YouTube Studio to add users to private videos');
+		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
+
 		try {
 			// @ts-ignore
-			const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 			const page = await browser.newPage();
 			await page.goto(video.youtubeUrl, { waitUntil: 'networkidle2' });
 			await page.type('input[type="email"]', login.email);
@@ -58,6 +59,7 @@ function addEmailsToVideo(videoId) {
 			await browser.close();
 			resolve(videoId);
 		} catch (exception) {
+			await browser.close();
 			var result = {
 				err: exception,
 				videoId: videoId
