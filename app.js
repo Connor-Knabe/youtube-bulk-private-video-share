@@ -37,8 +37,6 @@ async function main() {
 
 function addEmailsToVideo(videoId) {
 	return new Promise(async (resolve, reject) => {
-		// logger.info('Processing video url: ', videoId);
-		// logger.info(new Date(), 'Logging into YouTube Studio to add users to private videos');
 		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 
 		try {
