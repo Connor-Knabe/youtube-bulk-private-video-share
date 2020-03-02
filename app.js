@@ -15,14 +15,15 @@ logger.info('start');
 //debug
 // openAllVideoLinks();
 
-main();
-async function main() {
-	for (let vidNum = 0; vidNum < video.youtubeVideoIds.length; vidNum += options.parallelBrowserCount) {
+main(video.youtubeVideos);
+
+async function main(vids) {
+	for (let vidNum = 0; vidNum < vids.length; vidNum += options.parallelBrowserCount) {
 		var browsers = [];
 		for (let browserNum = 0; browserNum < options.parallelBrowserCount; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
-			if (video.youtubeVideoIds[currentVideoNum]) {
-				browsers.push(addEmailsToVideo(video.youtubeVideoIds[currentVideoNum]));
+			if (vids[currentVideoNum]) {
+				browsers.push(addEmailsToVideo(vids[currentVideoNum]));
 			}
 		}
 		await Promise.all(browsers)
@@ -30,14 +31,35 @@ async function main() {
 				logger.debug(`Successfully shared: ${videoId}`);
 			})
 			.catch((result) => {
-				logger.error(`Failed sharing: ${result.videoId}`);
+				logger.error(`Failed sharing: ${result.videoId} with exception ${result.exception}`);
 			});
+	}
+
+	if (vids.length > 1) {
+		var vidsNeedToRetry = vids.map((video) => {
+			if (video.retryCount > 0 && video.retryCount < 3) {
+				return video;
+			}
+		});
+
+		var vidsFailed = vids.map((video) => {
+			if (video.retryCount > 3) {
+				return video;
+			}
+		});
+
+		if (vidsFailed.length > 1) {
+			console.log('failed vids', vidsFailed);
+		}
+
+		main(vidsNeedToRetry);
 	}
 }
 
-function addEmailsToVideo(videoId) {
+function addEmailsToVideo(video) {
 	return new Promise(async (resolve, reject) => {
 		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
+		var videoId = video.VideoId;
 
 		try {
 			// @ts-ignore
@@ -62,6 +84,7 @@ function addEmailsToVideo(videoId) {
 			await browser.close();
 			resolve(videoId);
 		} catch (exception) {
+			video.retryCount++;
 			await browser.close();
 			var result = {
 				err: exception,
@@ -73,7 +96,7 @@ function addEmailsToVideo(videoId) {
 }
 
 function openAllVideoLinks() {
-	video.youtubeVideoIds.forEach((videoId) => {
+	video.youtubeVideos.forEach((videoId) => {
 		logger.info(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`);
 		open(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`);
 	});
