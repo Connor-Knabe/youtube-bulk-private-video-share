@@ -35,32 +35,33 @@ async function main(vids) {
 				logger.error(`Failed sharing: ${result.videoId} with exception ${result.exception}`);
 			});
 	}
-	checkForRetry(vids);
+
+	if (vids && vids != undefined && vids.length > 0) {
+		checkForRetry(vids);
+	}
 }
 
 function checkForRetry(vids) {
 	console.log('check fo retry', vids);
 
-	if (vids.length > 0 && vids != undefined) {
+	if (vids && vids.length > 0) {
 		var vidsNeedToRetry = vids.map((video) => {
-			if (video && video.retryCount > 0 && video.retryCount < 3) {
+			if (video && video.retryCount > 0 && video.retryCount < options.maxRetryCount) {
 				return video;
 			}
 		});
 
 		var vidsFailed = vids.map((video) => {
-			if (video && video.retryCount > 3) {
+			if (video && video.retryCount > options.maxRetryCount) {
 				return video;
 			}
 		});
 
-		if (vidsFailed.length > 0) {
+		if (vidsFailed && vidsNeedToRetry[0] != undefined && vidsFailed.length > 0) {
 			console.log('videos that have failed to retry', vidsFailed);
 		}
 
-		vidsNeedToRetry = undefined;
-
-		if (vidsNeedToRetry && vidsNeedToRetry.length > 0) {
+		if (vidsNeedToRetry && vidsNeedToRetry[0] != undefined && vidsNeedToRetry.length > 0) {
 			console.log('need to retry', vidsNeedToRetry);
 			main(vidsNeedToRetry);
 		}
