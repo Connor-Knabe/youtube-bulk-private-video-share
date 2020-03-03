@@ -32,7 +32,7 @@ async function main(vids) {
 				logger.debug(`Successfully shared: ${videoId}`);
 			})
 			.catch((result) => {
-				logger.error(`Failed sharing: ${result.videoId} with exception ${result.exception}`);
+				logger.error(`Failed sharing: ${result.videoId} with exception ${result.error}`);
 			});
 	}
 
@@ -84,27 +84,32 @@ function addEmailsToVideo(vid) {
 			await page.type('body', '\u000d');
 			await page.waitForNavigation();
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
-			if (options.disableEmailNotification) {
-				await page.click('.yt-uix-form-input-checkbox.notify-via-email');
-			}
-			await page.waitFor(1000);
 
 			if (options.removeOnAdd) {
 				await page.click('.sharing-dialog-remove-all-container.control-small-text');
 			}
-			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
-			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', vid.inputEmails);
 
-			await page.waitFor(5000);
+			await page.waitFor(500);
+
+			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
+			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', videoFile.inputEmails);
+
+			await page.waitFor(500);
+
+			if (options.disableEmailNotification) {
+				await page.waitFor('.yt-uix-form-input-checkbox.notify-via-email');
+				await page.click('.yt-uix-form-input-checkbox.notify-via-email');
+			}
+
 			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
-			await page.waitFor(5000);
+			await page.waitFor(2000);
 			await browser.close();
 			resolve(videoId);
 		} catch (exception) {
 			vid.retryCount++;
 			await browser.close();
 			var result = {
-				err: exception,
+				error: exception,
 				videoId: videoId
 			};
 			reject(result);
