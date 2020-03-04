@@ -71,7 +71,6 @@ function addEmailsToVideo(vid) {
 	return new Promise(async (resolve, reject) => {
 		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 		var videoId = vid.videoId;
-
 		try {
 			// @ts-ignore
 			const page = await browser.newPage();
@@ -89,12 +88,16 @@ function addEmailsToVideo(vid) {
 				await page.click('.sharing-dialog-remove-all-container.control-small-text');
 			}
 
-			await page.waitFor(500);
+			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
+
+			await page.waitFor(5000);
+
+			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
 
 			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
 			await page.type('.yt-uix-form-input-textarea.metadata-share-contacts', videoFile.inputEmails);
 
-			await page.waitFor(500);
+			await page.waitFor(1000);
 
 			if (options.disableEmailNotification) {
 				await page.waitFor('.yt-uix-form-input-checkbox.notify-via-email');
@@ -102,7 +105,7 @@ function addEmailsToVideo(vid) {
 			}
 
 			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
-			await page.waitFor(2000);
+			await page.waitFor(5000);
 			await browser.close();
 			resolve(videoId);
 		} catch (exception) {
