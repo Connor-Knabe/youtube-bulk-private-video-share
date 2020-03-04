@@ -1,0 +1,3 @@
+v0.3 - only open browser and login once for multiple videos
+v0.2 - adding retry and remove
+
