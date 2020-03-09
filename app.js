@@ -7,8 +7,6 @@ const videoFile = require('./video.js');
 const options = require('./options.js');
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-var page = null;
-var browser = null;
 
 // @ts-ignore
 puppeteer.use(StealthPlugin());
@@ -20,30 +18,22 @@ logger.info('start');
 main(videoFile.youtubeVideos);
 
 async function main(vids) {
-	await setupBrowser();
-
 	for (let vidNum = 0; vidNum < vids.length; vidNum += options.parallelBrowserCount) {
 		var browsers = [];
 		for (let browserNum = 0; browserNum < options.parallelBrowserCount; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
 			if (vids[currentVideoNum]) {
 				console.log(vids[currentVideoNum]);
-				browsers.push(addEmailsToVideo(vids[currentVideoNum]));
+				browsers.push(addEmailsToVideo(vids[currentVideoNum], vidNum));
 			}
 		}
-		await Promise.all(browsers)
-			.then((videoId) => {
-				logger.debug(`Successfully shared: ${videoId}`);
-			})
-			.catch((result) => {
-				logger.error(`Failed sharing: ${result.videoId} with exception ${result.error}`);
-			});
+		await Promise.all(browsers).then((videoId) => {
+			// logger.debug(`Successfully shared: ${videoId}`);
+		});
 	}
 
 	if (vids && vids != undefined && vids.length > 0) {
 		checkForRetry(vids);
-	} else {
-		browser.close();
 	}
 }
 
@@ -69,34 +59,27 @@ function checkForRetry(vids) {
 
 		if (vidsNeedToRetry && vidsNeedToRetry[0] != undefined && vidsNeedToRetry.length > 0) {
 			console.log('need to retry', vidsNeedToRetry);
-			browser.close();
 			main(vidsNeedToRetry);
 		}
 	}
 }
 
-async function setupBrowser() {
+function addEmailsToVideo(vid, vidNum) {
 	return new Promise(async (resolve, reject) => {
-		browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
-
-		page = await browser.newPage();
-		await page.goto(videoFile.youtubeUrl, { waitUntil: 'networkidle2' });
-		await page.type('input[type="email"]', login.email);
-		await page.type('body', '\u000d');
-		await page.waitForNavigation();
-		await page.waitFor(2000);
-		await page.type('input[type="password"]', login.pass);
-		await page.type('body', '\u000d');
-		await page.waitForNavigation();
-		resolve();
-	});
-}
-
-function addEmailsToVideo(vid) {
-	return new Promise(async (resolve, reject) => {
+		console.log('vidNum', vidNum);
+		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 		var videoId = vid.videoId;
 		try {
 			// @ts-ignore
+			const page = await browser.newPage();
+			await page.goto(videoFile.youtubeUrl, { waitUntil: 'networkidle2' });
+			await page.type('input[type="email"]', login.email);
+			await page.type('body', '\u000d');
+			await page.waitForNavigation();
+			await page.waitFor(2000);
+			await page.type('input[type="password"]', login.pass);
+			await page.type('body', '\u000d');
+			await page.waitForNavigation();
 
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
 
@@ -120,16 +103,18 @@ function addEmailsToVideo(vid) {
 
 			await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
 			await page.waitFor(5000);
-			// await browser.close();
+			await browser.close();
+			logger.debug(`Successfully shared: ${videoId}`);
 			resolve(videoId);
 		} catch (exception) {
 			vid.retryCount++;
-			// await browser.close();
+			await browser.close();
 			var result = {
 				error: exception,
 				videoId: videoId
 			};
-			reject(result);
+			logger.error(`Failed sharing: ${result.videoId} with exception ${result.error}`);
+			resolve(result);
 		}
 	});
 }
