@@ -23,7 +23,6 @@ async function main(vids) {
 		for (let browserNum = 0; browserNum < options.parallelBrowserCount; browserNum++) {
 			var currentVideoNum = vidNum + browserNum;
 			if (vids[currentVideoNum]) {
-				console.log(vids[currentVideoNum]);
 				browsers.push(addEmailsToVideo(vids[currentVideoNum], vidNum));
 			}
 		}
@@ -66,7 +65,6 @@ function checkForRetry(vids) {
 
 function addEmailsToVideo(vid, vidNum) {
 	return new Promise(async (resolve, reject) => {
-		console.log('vidNum', vidNum);
 		const browser = await puppeteer.launch({ headless: options.disableBrowserWindow });
 		var videoId = vid.videoId;
 		try {
@@ -84,6 +82,8 @@ function addEmailsToVideo(vid, vidNum) {
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
 
 			if (options.removeOnAdd) {
+				await page.waitFor(6000);
+				await page.waitFor('.sharing-dialog-remove-all-container.control-small-text');
 				await page.click('.sharing-dialog-remove-all-container.control-small-text');
 				await page.waitFor(1000);
 				await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
