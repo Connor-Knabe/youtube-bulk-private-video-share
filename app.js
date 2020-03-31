@@ -13,9 +13,9 @@ puppeteer.use(StealthPlugin());
 logger.info('start');
 
 //debug
-// openAllVideoLinks();
+openAllVideoLinks();
 
-main(videoFile.youtubeVideos);
+// main(videoFile.youtubeVideos);
 
 async function main(vids) {
 	for (let vidNum = 0; vidNum < vids.length; vidNum += options.parallelBrowserCount) {
@@ -120,8 +120,8 @@ function addEmailsToVideo(vid, vidNum) {
 }
 
 function openAllVideoLinks() {
-	videoFile.youtubeVideos.forEach((videoId) => {
-		logger.info(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`);
-		open(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`);
+	videoFile.youtubeVideos.forEach((video) => {
+		logger.info(`https://www.youtube.com/edit?video_id=${video.videoId}&nps=1`);
+		open(`https://www.youtube.com/edit?video_id=${video.videoId}&nps=1`);
 	});
 }
