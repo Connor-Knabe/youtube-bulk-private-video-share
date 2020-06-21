@@ -13,9 +13,9 @@ puppeteer.use(StealthPlugin());
 logger.info('start');
 
 //debug
-openAllVideoLinks();
+// openAllVideoLinks();
 
-// main(videoFile.youtubeVideos);
+main(videoFile.youtubeVideos);
 
 async function main(vids) {
 	for (let vidNum = 0; vidNum < vids.length; vidNum += options.parallelBrowserCount) {
