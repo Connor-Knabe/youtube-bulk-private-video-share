@@ -9,7 +9,7 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 // @ts-ignore
-puppeteer.use(StealthPlugin());
+// puppeteer.use(StealthPlugin());
 logger.info('start');
 
 //debug
@@ -69,17 +69,28 @@ function addEmailsToVideo(vid, vidNum) {
 		var videoId = vid.videoId;
 		try {
 			// @ts-ignore
-			const page = await browser.newPage();
+
+			var page = await browser.newPage();
+
 			await page.goto(videoFile.youtubeUrl, { waitUntil: 'networkidle2' });
+
 			await page.type('input[type="email"]', login.email);
 			await page.type('body', '\u000d');
 			await page.waitForNavigation();
 			await page.waitFor(2000);
 			await page.type('input[type="password"]', login.pass);
 			await page.type('body', '\u000d');
+
 			await page.waitForNavigation();
 
 			await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
+
+			await page.click('#video-overflow-menu');
+			await page.waitFor(2000);
+			await page.click('#text-item-2 > ytcp-ve > div > div > yt-formatted-string');
+			await page.waitFor(2000);
+			var pages = await browser.pages();
+			page = pages[2];
 
 			if (options.removeOnAdd) {
 				await page.waitFor(6000);
@@ -87,8 +98,17 @@ function addEmailsToVideo(vid, vidNum) {
 				await page.click('.sharing-dialog-remove-all-container.control-small-text');
 				await page.waitFor(1000);
 				await page.click('.yt-uix-button.yt-uix-button-size-default.yt-uix-button-primary.sharing-dialog-button.sharing-dialog-ok');
-				await page.waitFor(5000);
+				page = pages[1];
+
+				await page.waitFor(500);
+
 				await page.goto(`https://www.youtube.com/edit?video_id=${videoId}&nps=1`, { waitUntil: 'networkidle2' });
+				await page.click('#video-overflow-menu');
+				await page.waitFor(2000);
+				await page.click('#text-item-2 > ytcp-ve > div > div > yt-formatted-string');
+				await page.waitFor(2000);
+				pages = await browser.pages();
+				page = pages[2];
 			}
 
 			await page.waitFor('.yt-uix-form-input-textarea.metadata-share-contacts');
