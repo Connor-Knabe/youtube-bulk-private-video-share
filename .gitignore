@@ -1,4 +1,5 @@
 core
+*.png
 login.js
 node_modules
 video.js
